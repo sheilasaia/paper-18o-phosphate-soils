@@ -1,4 +1,4 @@
-# icp reformatting and processing script
+# icp calibration script
 # last updated 20180229
 # contact: sheila saia (sms403@cornell.edu)
 
@@ -32,10 +32,10 @@ soil_wts_sel = soil_wts %>%
 # select only what we need
 nahco3_data_raw_blk = nahco3_data_raw %>% 
   filter(Bonn_SampleID == "blank") %>% 
-  select(RowNum, Bonn_SampleID:P_RSDperc)
+  select(Bonn_SampleID:P_RSDperc)
 nahco3_data_raw_sel = nahco3_data_raw %>%
   filter(Extraction == "nahco3" & Bonn_SampleID != "blank") %>%
-  select(RowNum, Bonn_SampleID:P_RSDperc)
+  select(Bonn_SampleID:P_RSDperc)
 
 # join soil_wts_sel and nahco3_data_sel
 nahco3_raw_data_join = left_join(nahco3_data_raw_sel, soil_wts_sel, by = "Bonn_SampleID")
@@ -44,13 +44,15 @@ nahco3_raw_data_join = left_join(nahco3_data_raw_sel, soil_wts_sel, by = "Bonn_S
 avg_blk_nahco3 = mean(nahco3_data_raw_blk$P_mgperL)
 
 # subtract average amount of P in method blank from samples and calculate TP in mg/kg and umol
-vol_soln_added = 30 # volume of solution added for extraction (ml)
-phosphate_molec_wt=95 # 95 g of phosphate = 1 mol
+nahco3_vol_soln_added = 30 # volume of solution added for extraction (ml)
+phosphate_molec_wt = 95 # 95 g of phosphate = 1 mol
 nahco3_data = nahco3_raw_data_join %>%
   mutate(Pfix_mgperL = P_mgperL - avg_blk_nahco3) %>%
-  mutate(TP_mgperkg = Pfix_mgperL * (vol_soln_added / dry_soil_added_g) * Dilution) %>%
-  mutate(TP_umol = (TP_mgperkg * dry_soil_added_g) / phosphate_molec_wt) %>%
-  select(-P_mgperL, -P_RSDperc, -Pfix_mgperL)
+  mutate(P_mgperkg = Pfix_mgperL * (nahco3_vol_soln_added / dry_soil_added_g) * Dilution) %>%
+  mutate(P_umol = (P_mgperkg * dry_soil_added_g) / phosphate_molec_wt) %>%
+  mutate(row_num = seq(1:dim(nahco3_raw_data_join)[1])) %>%
+  mutate(P_pool = "TP") %>%
+  select(row_num, Bonn_SampleID, SampleID, Rep, Month, Extraction, Method, P_pool, P_mgperkg, P_umol)
 
 # for 18O isolation, need at least 30 umol of TP
 
@@ -66,10 +68,10 @@ write_csv(nahco3_data, "icp_nahco3_calibrated.csv")
 # select only what we need
 naoh_data_raw_blk = naoh_data_raw %>% 
   filter(Bonn_SampleID == "blank") %>% 
-  select(RowNum, Bonn_SampleID:P_RSDperc)
+  select(Bonn_SampleID:P_RSDperc)
 naoh_data_raw_sel = naoh_data_raw %>%
   filter(Extraction == "naoh" & Bonn_SampleID != "blank") %>%
-  select(RowNum, Bonn_SampleID:P_RSDperc)
+  select(Bonn_SampleID:P_RSDperc)
 
 # join soil_wts_sel and naoh_data_sel
 naoh_raw_data_join = left_join(naoh_data_raw_sel, soil_wts_sel, by = "Bonn_SampleID")
@@ -78,13 +80,16 @@ naoh_raw_data_join = left_join(naoh_data_raw_sel, soil_wts_sel, by = "Bonn_Sampl
 avg_blk_naoh = mean(naoh_data_raw_blk$P_mgperL)
 
 # subtract average amount of P in method blank from samples and calculate TP in mg/kg and umol
-vol_soln_added = 30 # volume of solution added for extraction (ml)
+naoh_vol_soln_added = 30 # volume of solution added for extraction (ml)
 phosphate_molec_wt=95 # 95 g of phosphate = 1 mol
 naoh_data = naoh_raw_data_join %>%
   mutate(Pfix_mgperL = P_mgperL - avg_blk_naoh) %>%
-  mutate(TP_mgperkg = Pfix_mgperL * (vol_soln_added / dry_soil_added_g) * Dilution) %>%
-  mutate(TP_umol = (TP_mgperkg * dry_soil_added_g) / phosphate_molec_wt) %>%
-  select(-P_mgperL, -P_RSDperc, -Pfix_mgperL)
+  mutate(P_mgperkg = Pfix_mgperL * (naoh_vol_soln_added / dry_soil_added_g) * Dilution) %>%
+  mutate(P_umol = (P_mgperkg * dry_soil_added_g) / phosphate_molec_wt) %>%
+  mutate(row_num = seq(1:dim(naoh_raw_data_join)[1])) %>%
+  mutate(P_pool = "TP") %>%
+  select(row_num, Bonn_SampleID, SampleID, Rep, Month, Extraction, Method, P_pool, P_mgperkg, P_umol)
+
 
 # for 18O isolation, need at least 30 umol of TP
 
@@ -100,10 +105,10 @@ write_csv(naoh_data, "icp_naoh_calibrated.csv")
 # select only what we need
 hcl_data_raw_blk = hcl_data_raw %>% 
   filter(Bonn_SampleID == "blank") %>% 
-  select(RowNum, Bonn_SampleID:P_RSDperc)
+  select(Bonn_SampleID:P_RSDperc)
 hcl_data_raw_sel = hcl_data_raw %>%
   filter(Extraction == "hcl" & Bonn_SampleID != "blank") %>%
-  select(RowNum, Bonn_SampleID:P_RSDperc)
+  select(Bonn_SampleID:P_RSDperc)
 
 # join soil_wts_sel and hcl_data_sel
 hcl_raw_data_join = left_join(hcl_data_raw_sel, soil_wts_sel, by = "Bonn_SampleID")
@@ -112,13 +117,15 @@ hcl_raw_data_join = left_join(hcl_data_raw_sel, soil_wts_sel, by = "Bonn_SampleI
 avg_blk_hcl = mean(hcl_data_raw_blk$P_mgperL)
 
 # subtract average amount of P in method blank from samples and calculate TP in mg/kg and umol
-vol_soln_added = 30 # volume of solution added for extraction (ml)
+hcl_vol_soln_added = 30 # volume of solution added for extraction (ml)
 phosphate_molec_wt=95 # 95 g of phosphate = 1 mol
-hcl_data = hcl_raw_data_join %>%
+hcl_data = naoh_raw_data_join %>%
   mutate(Pfix_mgperL = P_mgperL - avg_blk_hcl) %>%
-  mutate(TP_mgperkg = Pfix_mgperL * (vol_soln_added / dry_soil_added_g) * Dilution) %>%
-  mutate(TP_umol = (TP_mgperkg * dry_soil_added_g) / phosphate_molec_wt) %>%
-  select(-P_mgperL, -P_RSDperc, -Pfix_mgperL)
+  mutate(P_mgperkg = Pfix_mgperL * (hcl_vol_soln_added / dry_soil_added_g) * Dilution) %>%
+  mutate(P_umol = (P_mgperkg * dry_soil_added_g) / phosphate_molec_wt) %>%
+  mutate(row_num = seq(1:dim(hcl_raw_data_join)[1])) %>%
+  mutate(P_pool = "TP") %>%
+  select(row_num, Bonn_SampleID, SampleID, Rep, Month, Extraction, Method, P_pool, P_mgperkg, P_umol)
 
 # for 18O isolation, need at least 30 umol of TP
 
