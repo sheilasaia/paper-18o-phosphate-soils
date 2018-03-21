@@ -4,6 +4,10 @@
 
 # ---- 1 load libraries ----
 
+# clear ws
+rm(list = ls())
+
+# load packages
 library(tidyverse)
 
 # ---- 2 load data ----
@@ -135,3 +139,26 @@ setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/icp_da
 # export
 write_csv(hcl_data, "icp_hcl_calibrated.csv")
 
+
+# ---- 6 ox data reformatting ----
+
+# set working directory for icp ox data (did analysis at Cornell)
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/site_and_exp_design_data")
+
+# load data
+cornell_data = read_csv("all_joined_data.csv")
+
+# select only what you need from cornell_data
+cornell_data_sel = cornell_data %>%
+  mutate(Extraction = "ox", Method = "icp", P_pool = "TP") %>%
+  select(SampleID, Rep = RepOx, Month, Extraction:P_pool, P_mgperkg = OxPmgkg) #, P_umol = OxPumol)
+
+# define bonn sample ids
+bonn_sample_ids_list = soil_wts_sel %>%
+  select(Bonn_SampleID, SampleID) %>%
+  na.omit() # drops blanks
+
+# join bonn sample ids with cornell_data_sel
+ox_data = left_join(bonn_sample_ids_list, cornell_data_sel, by = "SampleID") %>%
+  mutate(row_num = seq(1:60)) %>%
+  select(row_num, Bonn_SampleID:P_mgperkg)
