@@ -12,18 +12,18 @@ library(tidyverse)
 
 # ---- 2 load data ----
 
-# set working directory for soil extraction data
-setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/icp_data/raw_icp_data/")
-
 # load soil extraction data
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/icp_data/raw_icp_data/")
 nahco3_data_raw = read_csv("raw_reformatted_icp_nahco3.csv")
 naoh_data_raw = read_csv("raw_reformatted_icp_naoh.csv")
 hcl_data_raw = read_csv("raw_reformatted_icp_hcl.csv")
 
-# set working directory for soil extraction weights
-setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/site_and_exp_design_data/")
+# load ox data (did analysis at)
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/site_and_exp_design_data")
+cornell_data = read_csv("all_joined_data.csv")
 
 # load in soil weight data
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/site_and_exp_design_data/")
 soil_wts = read_table2("bonn_hedley1_soil_weights.txt")
 
 # select only what we need
@@ -123,7 +123,7 @@ avg_blk_hcl = mean(hcl_data_raw_blk$P_mgperL)
 # subtract average amount of P in method blank from samples and calculate TP in mg/kg and umol
 hcl_vol_soln_added = 30 # volume of solution added for extraction (ml)
 phosphate_molec_wt=95 # 95 g of phosphate = 1 mol
-hcl_data = naoh_raw_data_join %>%
+hcl_data = hcl_raw_data_join %>%
   mutate(Pfix_mgperL = P_mgperL - avg_blk_hcl) %>%
   mutate(P_mgperkg = Pfix_mgperL * (hcl_vol_soln_added / dry_soil_added_g) * Dilution) %>%
   mutate(P_umol = (P_mgperkg * dry_soil_added_g) / phosphate_molec_wt) %>%
@@ -142,12 +142,6 @@ write_csv(hcl_data, "icp_hcl_calibrated.csv")
 
 # ---- 6 ox data reformatting ----
 
-# set working directory for icp ox data (did analysis at Cornell)
-setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/site_and_exp_design_data")
-
-# load data
-cornell_data = read_csv("all_joined_data.csv")
-
 # select only what you need from cornell_data
 cornell_data_sel = cornell_data %>%
   mutate(Extraction = "ox", Method = "icp", P_pool = "TP") %>%
@@ -161,4 +155,11 @@ bonn_sample_ids_list = soil_wts_sel %>%
 # join bonn sample ids with cornell_data_sel
 ox_data = left_join(bonn_sample_ids_list, cornell_data_sel, by = "SampleID") %>%
   mutate(row_num = seq(1:60)) %>%
-  select(row_num, Bonn_SampleID:P_mgperkg)
+  select(row_num, Bonn_SampleID:P_mgperkg) %>%
+  mutate(P_umol = NA) # placeholder for now
+
+# set working directory
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/icp_data/")
+
+# export
+write_csv(ox_data, "icp_ox_calibrated.csv")
