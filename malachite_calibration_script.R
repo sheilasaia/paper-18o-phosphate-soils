@@ -12,20 +12,17 @@ library(tidyverse)
 
 # ---- 2 load data ----
 
-# set working directory for soil extraction data
-setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/malachite_data/raw_malachite_data/")
-
 # load soil extraction data
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/malachite_data/raw_malachite_data/")
 nahco3_data_raw = read_csv("raw_malachite_nahco3.csv", col_names = FALSE)
 naoh_data_raw = read_csv("raw_malachite_naoh.csv", col_names = FALSE)
 hcl_data_raw = read_csv("raw_malachite_hcl.csv", col_names = FALSE)
 ox_data_raw = read_csv("raw_malachite_ox.csv", col_names = FALSE)
 
-# set working directory for soil extraction weights
+# load in soil weight and cacl2 p data
 setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/site_and_exp_design_data/")
-
-# load in soil weight data
 soil_wts = read_table2("bonn_hedley1_soil_weights.txt")
+cornell_data = read_csv("all_joined_data.csv")
 
 # select only what we need
 soil_wts_sel = soil_wts %>%
@@ -306,3 +303,28 @@ setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/malach
 
 # export
 write_csv(ox_data, "malachite_ox_calibrated.csv")
+
+# ---- 7 cacl2 data reformatting ----
+
+# select only what you need from cornell_data
+cornell_cacl2_data = cornell_data %>%
+  mutate(Extraction = "cacl2", Method = "molybdenum", P_pool = "DP") %>%
+  select(SampleID, Rep = RepCacl2, Month, Extraction:P_pool, P_mgperkg = SRPmgkg) #, P_umol = SRPumol)
+
+# define bonn sample ids
+bonn_sample_ids_list = soil_wts_sel %>%
+  select(Bonn_SampleID, SampleID) %>%
+  na.omit() # drops blanks
+
+# join bonn sample ids with cornell_cacl2_data
+cacl2_data = left_join(bonn_sample_ids_list, cornell_cacl2_data, by = "SampleID") %>%
+  mutate(row_num = seq(1:60)) %>%
+  select(row_num, Bonn_SampleID:P_mgperkg) %>%
+  mutate(P_umol = NA) # placeholder for now
+
+# set working directory
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/malachite_data/")
+
+# export
+write_csv(cacl2_data, "molybdenum_cacl2_calibrated.csv")
+
