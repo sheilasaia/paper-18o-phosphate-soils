@@ -18,7 +18,7 @@ nahco3_data_raw = read_csv("raw_reformatted_icp_nahco3.csv")
 naoh_data_raw = read_csv("raw_reformatted_icp_naoh.csv")
 hcl_data_raw = read_csv("raw_reformatted_icp_hcl.csv")
 
-# load ox data (did analysis at)
+# load ox and total p data (did analysis at cornell)
 setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/site_and_exp_design_data")
 cornell_data = read_csv("all_joined_data.csv")
 
@@ -143,7 +143,7 @@ write_csv(hcl_data, "icp_hcl_calibrated.csv")
 # ---- 6 ox data reformatting ----
 
 # select only what you need from cornell_data
-cornell_data_sel = cornell_data %>%
+cornell_ox_data = cornell_data %>%
   mutate(Extraction = "ox", Method = "icp", P_pool = "TP") %>%
   select(SampleID, Rep = RepOx, Month, Extraction:P_pool, P_mgperkg = OxPmgkg) #, P_umol = OxPumol)
 
@@ -152,8 +152,8 @@ bonn_sample_ids_list = soil_wts_sel %>%
   select(Bonn_SampleID, SampleID) %>%
   na.omit() # drops blanks
 
-# join bonn sample ids with cornell_data_sel
-ox_data = left_join(bonn_sample_ids_list, cornell_data_sel, by = "SampleID") %>%
+# join bonn sample ids with cornell_ox_data
+ox_data = left_join(bonn_sample_ids_list, cornell_ox_data, by = "SampleID") %>%
   mutate(row_num = seq(1:60)) %>%
   select(row_num, Bonn_SampleID:P_mgperkg) %>%
   mutate(P_umol = NA) # placeholder for now
@@ -163,3 +163,28 @@ setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/icp_da
 
 # export
 write_csv(ox_data, "icp_ox_calibrated.csv")
+
+
+# ---- 7 totalp data reformatting ----
+
+# select only what you need from cornell_data
+cornell_totalp_data = cornell_data %>%
+  mutate(Extraction = "totalp", Method = "icp", P_pool = "TP") %>%
+  select(SampleID, Rep = RepTot, Month, Extraction:P_pool, P_mgperkg = TotPmgkg) #, P_umol = TotPumol)
+
+# define bonn sample ids
+bonn_sample_ids_list = soil_wts_sel %>%
+  select(Bonn_SampleID, SampleID) %>%
+  na.omit() # drops blanks
+
+# join bonn sample ids with cornell_cacl2_data
+totalp_data = left_join(bonn_sample_ids_list, cornell_totalp_data, by = "SampleID") %>%
+  mutate(row_num = seq(1:60)) %>%
+  select(row_num, Bonn_SampleID:P_mgperkg) %>%
+  mutate(P_umol = NA) # placeholder for now
+
+# set working directory
+setwd("/Users/ssaia/Documents/phd/oxygen_isotopes/bonn_soil_analysis/data/icp_data/")
+
+# export
+write_csv(totalp_data, "icp_totalp_calibrated.csv")
