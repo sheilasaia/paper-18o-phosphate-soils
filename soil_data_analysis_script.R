@@ -64,7 +64,7 @@ metadata_sel = metadata %>%
             avg_vmc_perc = mean(VMCCalibperc),
             avg_pH = mean(pH),
             avg_temp_c = mean(avgTempC),
-            avg_om_perc = mean(OMperc))
+            avg_om_perc = mean(OMperc)) # means are really just returning a unique average value (b/c should be the same)
 
 # bonn sample info select
 bonn_sample_info_sel = bonn_sample_info %>%
@@ -226,6 +226,48 @@ ggplot(isotope_data_sel_siltloam,aes(x=avg_vmc_perc,y=d18O, color = State, shape
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank())
+
+
+# ---- 4.5 plot isotope data vs environmental variables ----
+
+# make plot object
+my_iso_envir_plots = list()
+
+# pH
+my_iso_envir_plots[[1]] = ggplot(isotope_data_sel, aes(x = avg_pH, y = d18O, color = State, shape = Extraction)) +
+  geom_point(size = 3, alpha = 0.5) +
+  xlab("Average pH") +
+  ylab("d18O") + 
+  scale_color_manual(values = c("#f1a340", "#998ec3")) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank())
+
+# om
+my_iso_envir_plots[[2]] = ggplot(isotope_data_sel, aes(x = avg_temp_c, y = d18O, color = State, shape = Extraction)) +
+  geom_point(size = 3, alpha = 0.5) +
+  xlab("Average Temperature (deg C)") +
+  ylab("d18O") + 
+  scale_color_manual(values = c("#f1a340", "#998ec3")) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank())
+
+# temp
+my_iso_envir_plots[[3]] = ggplot(isotope_data_sel, aes(x = avg_om_perc, y = d18O, color = State, shape = Extraction)) +
+  geom_point(size = 3, alpha = 0.5) +
+  xlab("Average OM (%)") +
+  ylab("d18O") + 
+  scale_color_manual(values = c("#f1a340", "#998ec3")) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank())
+
+setwd("/Users/ssaia/Desktop")
+cairo_pdf("d18O_vs_environ_vars_by_state.pdf", width = 18, height = 6, pointsize = 18)
+multiplot(plotlist = my_iso_envir_plots, cols = 3)
+dev.off()
+
 
 # ---- 5.1 summarize isotope and p pool data ----
 
@@ -489,6 +531,15 @@ setwd("/Users/ssaia/Desktop")
 cairo_pdf("environ_vars_by_state.pdf", width = 10, height = 10, pointsize = 18)
 multiplot(plotlist = my_envir_plots, cols = 2)
 dev.off()
+
+# ---- 7.1 metadata table ----
+
+metadata_table_for_showing = metadata_sel %>%
+  right_join(bonn_sample_info_sel, by = "SampleID") %>%
+  unique() %>%
+  select(SiteID, STI, avg_vmc_perc:avg_om_perc, texture)
+
+
 
 # ---- extra ----
 
